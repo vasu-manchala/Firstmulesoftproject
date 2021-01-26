@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="427ec44e-802a-401b-bd96-b63c735adcf3" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<vm:config name="VM_Config" doc:name="VM Config" doc:id="69368179-7519-43b0-958f-17e9a11e198f">
+		<vm:queues >
+			<vm:queue queueName="VM1" />
+			<vm:queue queueName="VM2" />
+		</vm:queues>
+	</vm:config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="2ef79be6-69e5-46a9-99a2-1c2ff2a42225" >
+		<db:generic-connection url="jdbc:postgresql://localhost:9898/postgres" driverClassName="org.postgresql.Driver" user="postgres" password="manchala" />
+	</db:config>
+	<db:config name="Database_Config1" doc:name="Database Config" doc:id="b9064c6a-5a20-4723-a250-39ce6582b79e" >
+		<db:generic-connection url="jdbc:postgresql://localhost:9898/postgres" driverClassName="org.postgresql.Driver" user="postgres" password="manchala" />
+	</db:config>
+	<flow name="sampleFlow" doc:id="50bc3c34-42a4-480c-ba4e-4c79ba21ebd9" >
+		<http:listener doc:name="Listener" doc:id="19125c2e-2517-4fff-a77c-758beb3bfe5c" config-ref="HTTP_Listener_config" path="/test"/>
+		<set-payload value="#[10]" doc:name="Set Payload" doc:id="09f14ae9-f97a-4d76-8738-499a5a9ee195" />
+		<db:select doc:name="Select" doc:id="a5a39c6d-4868-4846-92f6-10bcbbcb16c7" config-ref="Database_Config2">
+			<db:sql><![CDATA[select * from basket_a]]></db:sql>
+		</db:select>
+		<vm:publish doc:name="Publish" doc:id="64d12d69-9e0b-49cf-bdb1-e363f46d393c" config-ref="VM_Config" sendCorrelationId="ALWAYS" correlationId="#[correlationId]" queueName="VM1"/>
+		<logger level="INFO" doc:name="Logger" doc:id="7e393fd2-11b5-411f-adb2-e615e32175f3" message="before publiss ++ #[payload]"/>
+		<set-payload value="#[22]" doc:name="Set Payload" doc:id="f62fba59-2460-4f47-a5b5-8436207cfe08" />
+		<logger level="INFO" doc:name="Logger" doc:id="be651a45-e092-4467-83ff-db467976e321" />
+	</flow>
+	<flow name="sampleFlow1" doc:id="327df670-8984-4ce3-80eb-0ab435892fdd" >
+		<vm:listener queueName="VM1" doc:name="Listener" doc:id="6bf1f388-d668-4db9-bb17-eba296f37959" config-ref="VM_Config"/>
+		<logger level="INFO" doc:name="Logger" doc:id="d0b8b406-672f-4571-a6e2-db41aabae587" message="after payload  #[payload]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="c03c2941-60a9-48fc-849c-8ef4cf7eb625" message="#[payload]"/>
+	</flow>
+</mule>
